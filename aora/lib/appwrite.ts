@@ -41,16 +41,12 @@ const account = new Account(client);
 const avatars = new Avatars(client);
 const databases = new Databases(client);
 
-export const createUser = async (
-  email: string,
-  password: string,
-  username: string
-) => {
-  // Register User
-  const userId = uuid.v4();
+const userId = uuid.v4();
+
+export async function createUser(email: string, password: string, username: string) {
   try {
     const newAccount = await account.create(
-      ID.unique(),
+      userId,
       email,
       password,
       username
@@ -63,42 +59,51 @@ export const createUser = async (
     await SignIn(email, password);
 
     const newUser = await databases.createDocument(
-      config.databaseId,
-      config.userCollectionId,
+      databaseId,
+      userCollectionId,
       userId,
       {
         accountId: newAccount.$id,
-        email,
-        username,
+        email: email,
+        username: username,
         avatar: avatarUrl,
       }
     );
 
     return newUser;
   } catch (error: any) {
-    console.log(error);
     throw new Error(error);
   }
-};
+}
 
 export const SignIn = async (email: string, password: string) => {
   try {
-    // Check for existing active sessions
+    // Check for existing sessions
     const sessions = await account.listSessions();
-
     if (sessions.sessions.length > 0) {
-      console.log("Active session found. Reusing existing session.");
-      return sessions.sessions[0]; // Return the first active session
+      console.log("Active session found. Using the existing session.");
+      return sessions.sessions[0]; 
     }
 
     // No active session, create a new one
-    const session = await account.createSession(email, password);
+    const session = await account.createEmailPasswordSession(email, password);
+    console.log("Session created successfully:", session);
     return session;
   } catch (error: any) {
-    console.log("Error during SignIn:", error);
-    throw new Error(error.message || "Sign-in failed");
+    throw new Error(error.message);
   }
 };
+
+
+export async function getAccount() {
+  try {
+    const currentAccount = await account.get();
+
+    return currentAccount;
+  } catch (error: any) {
+    // throw new Error(error);
+  }
+}
 
 export const getCurrentUser = async () => {
   try {
