@@ -8,7 +8,7 @@ const zoomIn = {
     scale: 0.9,
   },
   1: {
-    scale: 1,
+    scale: 1.1,
   }
 }
 
@@ -24,6 +24,8 @@ const zoomOut: any = {
 const TrendingItem = ({ activeItem, item }: any) => {
 
   const [play, setPlay] = useState(false);
+
+  console.log(activeItem.$id, item.$id)
 
   return (
     <Animatable.View
@@ -46,6 +48,8 @@ const TrendingItem = ({ activeItem, item }: any) => {
 
           <Image 
           source={icons.play}
+          className='w-12 h-12 absolute'
+          resizeMode='contain'
           />
         </TouchableOpacity>
       )}
@@ -54,7 +58,13 @@ const TrendingItem = ({ activeItem, item }: any) => {
 }
 
 const Trending = ({ posts }: any) => {
-  const [activeItem, setActiveItem] = useState(posts[0]);
+  const [activeItem, setActiveItem] = useState(posts[1]);
+
+  const viewableItemsChanged = ({ viewableItems }: any) => {
+    if(viewableItems.length > 0) {
+      setActiveItem(viewableItems[0].key);
+    }
+  }
 
   return (
     <FlatList 
@@ -63,6 +73,11 @@ const Trending = ({ posts }: any) => {
     renderItem={({ item }) => (
       <TrendingItem  activeItem={activeItem} item={item} />
     )}
+    onViewableItemsChanged={viewableItemsChanged}
+    viewabilityConfig={{
+      itemVisiblePercentThreshold: 70
+    }}
+    contentOffset={{ x: 170, y: 0 }}
     horizontal
     />
   )
